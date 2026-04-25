@@ -1,5 +1,66 @@
-# SENTIMENT-ANALYSIS-ON-DEMONETIZATION-USING-PIG
-Twitter is a social-networking platform which allows users to write short status updates of maximum length 140 characters. It is a rapidly expanding service with huge number of active users and half of them log on twitter on a daily basis -generating nearly 250 million tweets per day. Due to this large amount of usage we hope to achieve a reflection of public sentiment by analyzing the sentiments expressed in the tweets. In this project we will find out the views of different people on the demonetization by analyzing the tweets from twitter and we will classify the tweets as positive or negative tweets. Aim of this project is to develop a functional classifier for accurate and automatic sentiment classification of an unknown tweet stream.
+# Twitter Sentiment Analysis on Demonetization (Apache Pig)
 
-In this project we have a comma separated value file (CSV) which is composed of all the tweets that were tweeted during the period of demonetization. This csv file contains both positive and negative tweets. We have one more txt file which contains words with a value ranging from -5 to +5. These values are used to decide whether the word is negative or positive. Values below zero represent negative words and hence if these are used more in a tweet it’s considered as negative tweet and it values range above zero they are considered as positive and if they are used then the tweet is categorized as positive tweet.
-We developed a pig script file which runs mapreduce function taking this both csv and txt file as inputs. This file runs through each line of csv file that is through each tweet and categorizes whether tweet is positive or negative. These tweets are stored in respective files with names positive tweets and negative tweets. We finally show the outputs of the project after execution of the pig script file by printing these files. 
+This project classifies demonetization-related tweets into sentiment groups using an Apache Pig script and the AFINN sentiment lexicon.
+
+## What this project does
+
+- Reads tweets from a CSV file (`id,text` format)
+- Tokenizes each tweet into words
+- Looks up each word in `AFINN.txt` (word -> score from `-5` to `+5`)
+- Computes an average sentiment score per tweet
+- Writes tweets to:
+  - `positive_tweets` (`tweet_rating > 0`)
+  - `negative_tweets` (`tweet_rating < 0`)
+  - `neutral_tweets` (`tweet_rating == 0`)
+
+## Project files
+
+- `demonotetization_analysis.pig`: main Pig script
+- `AFINN.txt`: sentiment dictionary
+- `docs/DATASET.md`: expected input schema and formatting rules
+- `scripts/run_pig.ps1`: helper script for running Pig on Windows/PowerShell
+
+## Prerequisites
+
+- Apache Hadoop + Apache Pig installed and available in your environment
+- Input tweets file available in CSV format
+
+## Run the analysis
+
+Use either direct Pig command or helper script.
+
+### Option 1: Direct Pig command
+
+```bash
+pig ^
+  -param INPUT_TWEETS="demonetization-tweets.csv" ^
+  -param INPUT_LEXICON="AFINN.txt" ^
+  -param OUTPUT_DIR="output" ^
+  demonotetization_analysis.pig
+```
+
+### Option 2: PowerShell helper
+
+```powershell
+.\scripts\run_pig.ps1 -TweetsPath "demonetization-tweets.csv" -LexiconPath "AFINN.txt" -OutputDir "output"
+```
+
+## Output
+
+After execution, the output directory contains:
+
+- `output/positive_tweets`
+- `output/negative_tweets`
+- `output/neutral_tweets`
+
+Each output record includes:
+
+- `id`
+- `text`
+- `tweet_rating` (average sentiment score)
+
+## Notes
+
+- Unknown words (not in `AFINN.txt`) are treated as `0` score.
+- Text is lowercased before lexicon matching for more consistent results.
+- CSV parsing assumes simple comma-separated input. If tweet text includes unescaped commas, preprocess input first.
